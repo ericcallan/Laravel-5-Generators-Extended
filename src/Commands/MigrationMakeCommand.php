@@ -74,6 +74,7 @@ class MigrationMakeCommand extends Command
 
         $this->makeMigration();
         $this->makeModel();
+        $this->makeController();
     }
 
     /**
@@ -107,6 +108,17 @@ class MigrationMakeCommand extends Command
             $this->call('make:model', [
                 'name' => $this->getModelName()
             ]);
+        }
+    }
+
+    /**
+     * Generate a fully fleshed out controller, if the user wishes.
+     */
+    protected function makeController()
+    {
+        $controllerPath = $this->getControllerPath($this->getControllerName());
+        if ($this->option('controller') && !$this->files->exists($controllerPath)) {
+
         }
     }
 
@@ -145,6 +157,18 @@ class MigrationMakeCommand extends Command
         $name = str_replace($this->getAppNamespace(), '', $name);
 
         return $this->laravel['path'] . '/' . str_replace('\\', '/', $name) . '.php';
+    }
+
+        /**
+     * Get the destination class path.
+     *
+     * @param  string $name
+     * @return string
+     */
+    protected function getControllerPath($name)
+    {
+        $name = str_replace($this->getAppNamespace(), '', $name);
+        return $this->laravel['path'] . 'Http/Controllers/' . str_replace('\\', '/', $name) . '.php';
     }
 
     /**
@@ -223,6 +247,16 @@ class MigrationMakeCommand extends Command
     }
 
     /**
+     * Get the class name for the Controller generator.
+     *
+     * @return string
+     */
+    protected function getControllerName()
+    {
+        return ucwords(str_singular(camel_case($this->meta['table'])));
+    }
+
+    /**
      * Get the console command arguments.
      *
      * @return array
@@ -244,6 +278,7 @@ class MigrationMakeCommand extends Command
         return [
             ['schema', 's', InputOption::VALUE_OPTIONAL, 'Optional schema to be attached to the migration', null],
             ['model', null, InputOption::VALUE_OPTIONAL, 'Want a model for this table?', true],
+            ['controller', null, InputOption::VALUE_OPTIONAL, 'Want a controller for this table?', true],
         ];
     }
 }
