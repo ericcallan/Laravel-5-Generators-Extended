@@ -19,6 +19,7 @@ class NameParser
         }
 
         return [
+            'name' => $name,
             'action' => $this->getAction($segments),
             'table' => $this->getTableName($segments)
         ];

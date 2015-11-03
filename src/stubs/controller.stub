@@ -10,8 +10,8 @@ class {{class}} extends Controller {
      */
     public function index()
     {
-        ${{classvar}} = {{class}}::all();
-        $data = array('{{classvar}}' => ${{classvar}});
+        ${{plural}} = {{class}}::all();
+        $data = array('{{plural}}' => ${{plural}});
 
         return \View::make('{{class}}.index', $data);
     }
@@ -44,8 +44,8 @@ class {{class}} extends Controller {
      */
     public function edit($id)
     {
-        ${{classvar}} = {{class}}::findOrFail($id);
-        $data = array('{{classvar}}' => ${{classvar}});
+        ${{singular}} = {{class}}::findOrFail($id);
+        $data = array('{{singular}}' => ${{singular}});
         return \View::make('{{class}}.edit', $data);
     }
 
@@ -68,8 +68,8 @@ class {{class}} extends Controller {
      */
     public function destroy($id)
     {
-        ${{classvar}} = {{class}}::find($id);
-        ${{classvar}}->delete();
+        ${{singular}} = {{class}}::find($id);
+        ${{singular}}->delete();
     }
 
 }
