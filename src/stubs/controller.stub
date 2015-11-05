@@ -1,7 +1,15 @@
 <?php
-use App\Http\Controllers\Controller;
+namespace App\Http\Controllers;
 
-class {{class}} extends Controller {
+use Illuminate\Support\Facades\Input;
+use App\{{class}};
+
+class {{class}}Controller extends Controller
+{
+
+    public function __construct()
+    {
+    }
 
     /**
      * Display a listing of the resource.
@@ -11,7 +19,8 @@ class {{class}} extends Controller {
     public function index()
     {
         ${{plural}} = {{class}}::all();
-        $data = array('{{plural}}' => ${{plural}});
+        $cols = \Schema::getColumnListing('{{plural}}');
+        $data = array('data' => ${{plural}}, 'cols' => $cols);
 
         return \View::make('{{class}}.index', $data);
     }
@@ -23,7 +32,9 @@ class {{class}} extends Controller {
      */
     public function create()
     {
-        //
+        $cols = \Schema::getColumnListing('{{plural}}');
+        $data = array('cols' => $cols);
+        return \View::make('{{class}}.create', $data);
     }
 
     /**
@@ -33,7 +44,17 @@ class {{class}} extends Controller {
      */
     public function store()
     {
-        $data = \Input::all();
+        $input = \Input::all();
+        $cols = \Schema::getColumnListing('{{plural}}');
+        ${{singular}} = new {{class}}();
+        foreach($cols as $col) {
+            if($col != 'id' && $col != 'created_at' && $col != 'updated_at') {
+                ${{singular}}->$col = $input[$col];
+            }
+        }
+        ${{singular}}->save();
+
+        return redirect('/{{plural}}');
     }
 
     /**
@@ -45,7 +66,8 @@ class {{class}} extends Controller {
     public function edit($id)
     {
         ${{singular}} = {{class}}::findOrFail($id);
-        $data = array('{{singular}}' => ${{singular}});
+        $cols = \Schema::getColumnListing('{{plural}}');
+        $data = array('{{singular}}' => ${{singular}}, 'cols' => $cols);
         return \View::make('{{class}}.edit', $data);
     }
 
@@ -57,7 +79,17 @@ class {{class}} extends Controller {
      */
     public function update($id)
     {
-        $data = \Input::all();
+        $input = \Input::all();
+        $cols = \Schema::getColumnListing('{{plural}}');
+        ${{singular}} = {{class}}::findOrFail($id);
+        foreach($cols as $col) {
+            if($col != 'id' && $col != 'created_at' && $col != 'updated_at') {
+                ${{singular}}->$col = $input[$col];
+            }
+        }
+        ${{singular}}->save();
+
+        return redirect('/{{plural}}');
     }
 
     /**

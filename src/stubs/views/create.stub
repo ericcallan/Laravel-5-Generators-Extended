@@ -1,0 +1,12 @@
+@extends('master')
+@section('content')
+<form action="/{{plural}}/create" method="POST">
+@foreach($cols as $col)
+	@if($col != 'created_at' && $col != 'updated_at'  && $col != 'id')
+		<label for="{{$col}}">{{$col}}</label>
+	  	<input type="text" name="{{$col}}" value=""><br>
+  	@endif
+@endforeach
+<input type="submit" value="create">
+</form>
+@stop

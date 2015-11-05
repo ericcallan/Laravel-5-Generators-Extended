@@ -12,7 +12,7 @@ use Laracasts\Generators\Migrations\SyntaxBuilder;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
-class ControllerService
+class ViewService
 {
     use AppNamespaceDetectorTrait;
 
@@ -38,17 +38,45 @@ class ControllerService
     /**
      * Generate a fully fleshed out controller, if the user wishes.
      */
-    public function makeController()
+    public function makeViews()
     {
-        $controllerPath = $this->getPath($this->getClassName());
+        $valid = false;
+        $indexPath = $this->getPath($this->getClassName(), 'index');
+        $this->makeDirectory($indexPath);
 
-        if (!$this->files->exists($controllerPath)) {
-            if($this->files->put($controllerPath, $this->compileControllerStub())){
-                return true;
+        $createPath = $this->getPath($this->getClassName(), 'create');
+        $this->makeDirectory($createPath);
+
+        $editPath = $this->getPath($this->getClassName(), 'edit');
+        $this->makeDirectory($editPath);
+
+        if (!$this->files->exists($indexPath)) {
+            if($this->files->put($indexPath, $this->compileViewStub('index'))){
+                $valid = true;
             }
         }
 
-        return false;
+        if (!$this->files->exists($createPath)) {
+            if($this->files->put($createPath, $this->compileViewStub('create'))){
+                $valid = true;
+            }
+        }
+
+        if (!$this->files->exists($editPath)) {
+            if($this->files->put($editPath, $this->compileViewStub('edit'))){
+                $valid = true;
+            }
+        }
+
+        $masterPath = base_path() . '/resources/views/master.blade.php';
+        $stub = $this->files->get(__DIR__ . '/../stubs/views/master.stub');
+        if (!$this->files->exists($masterPath)) {
+            if($this->files->put($masterPath, $this->compileViewStub('master'))){
+                $valid = true;
+            }
+        }
+
+        return $valid;
     }
 
     /**
@@ -56,9 +84,9 @@ class ControllerService
      *
      * @return string
      */
-    protected function compileControllerStub()
+    protected function compileViewStub($type)
     {
-        $stub = $this->files->get(__DIR__ . '/../stubs/controller.stub');
+        $stub = $this->files->get(__DIR__ . '/../stubs/views/' .$type . '.stub');
         $this->replaceClassName($stub)
             ->replaceVariableName($stub);
         return $stub;
@@ -84,10 +112,10 @@ class ControllerService
      * @param  string $name
      * @return string
      */
-    protected function getPath($name)
+    protected function getPath($name, $type)
     {
         $name = str_replace($this->getAppNamespace(), '', $name);
-        return app_path() . '/Http/Controllers/' . str_replace('\\', '/', $name) . 'Controller.php';
+        return base_path() . '/resources/views/' . str_replace('\\', '/', $name) . '/' . $type . '.blade.php';
     }
 
     /**

@@ -1,0 +1,25 @@
+@extends('master')
+@section('content')
+<a class="button" href="{{plural}}/create">create new {{singular}}</a>
+<table>
+<tr>
+@foreach($cols as $col)
+	@if($col != 'created_at' && $col != 'updated_at')
+	<th>{{$col}}</th>
+	@endif
+@endforeach
+	<th>edit</th>
+	<th>delete</th>
+</tr>
+@foreach($data as $item)
+<tr>
+	@foreach($cols as $col)
+		@if($col != 'created_at' && $col != 'updated_at')
+		<td>{{$item->$col}}</td>
+		@endif
+	@endforeach
+	<td><a href="{{plural}}/edit/{{$item->id}}">edit</a></td>
+	<td><a href="{{plural}}/delete/{{$item->id}}">delete</a></td>
+</tr>
+@endforeach
+@stop

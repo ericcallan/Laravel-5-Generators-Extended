@@ -11,6 +11,7 @@ use Laracasts\Generators\Migrations\SchemaParser;
 use Laracasts\Generators\Migrations\SyntaxBuilder;
 use Laracasts\Generators\Services\MigrationService;
 use Laracasts\Generators\Services\ControllerService;
+use Laracasts\Generators\Services\ViewService;
 use Laracasts\Generators\Services\ModelService;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
@@ -74,9 +75,13 @@ class MigrationMakeCommand extends Command
     public function fire()
     {
         $this->meta = (new NameParser)->parse($this->argument('name'));
+
         $this->buildMigration();
         $this->buildController();
         $this->buildModel();
+        $this->buildViews();
+        $this->buildRoutes();
+
         $this->composer->dumpAutoloads();
     }
 
@@ -116,21 +121,44 @@ class MigrationMakeCommand extends Command
     }
 
     /**
-     * Build Out Model.
+     * Build Out Controller.
      *
      * @return mixed
      */
-    // protected function buildModel()
-    // {
-    //     if ($this->option('model')) {
-    //         $modelService = (new ModelService($this->meta, $this->files))->makeModel();
-    //         if($modelService) {
-    //             $this->info('Model created successfully.');
-    //         } else {
-    //             $this->info('It appears the Model already exists');
-    //         }
-    //     }
-    // }
+    protected function buildViews()
+    {
+        if ($this->option('views')) {
+            $viewService = (new ViewService($this->meta, $this->files))->makeViews();
+            if($viewService) {
+                $this->info('View created successfully.');
+            } else {
+                $this->info('It appears the View(s) already exists');
+            }
+        }
+    }
+
+    public function buildRoutes()
+    {
+        $routes = app_path() . '/Http/routes.php';
+
+        $contents = "Route::get('/" . str_plural(strtolower(camel_case($this->meta['table']))) . "', '" . ucwords(str_singular(camel_case($this->meta['table'])))  . "Controller@index');\n";
+        $contents .= "Route::get('/" . str_plural(strtolower(camel_case($this->meta['table']))) . "/create', '" . ucwords(str_singular(camel_case($this->meta['table'])))  . "Controller@create');\n";
+        $contents .= "Route::post('/" . str_plural(strtolower(camel_case($this->meta['table']))) . "/create', '" . ucwords(str_singular(camel_case($this->meta['table'])))  . "Controller@store');\n";
+        $contents .= "Route::get('/" . str_plural(strtolower(camel_case($this->meta['table']))) . "/edit/{id}', '" . ucwords(str_singular(camel_case($this->meta['table'])))  . "Controller@edit');\n";
+        $contents .= "Route::post('/" . str_plural(strtolower(camel_case($this->meta['table']))) . "/edit/{id}', '" . ucwords(str_singular(camel_case($this->meta['table'])))  . "Controller@update');\n";
+        $contents .= "Route::get('/" . str_plural(strtolower(camel_case($this->meta['table']))) . "/delete/{id}', '" . ucwords(str_singular(camel_case($this->meta['table'])))  . "Controller@destroy');\n\n";
+
+
+        $bytesWritten = \File::append($routes, $contents);
+        if ($bytesWritten === false)
+        {
+            $this->info('Hmm the routes file couldnt be written to');
+            return true;
+        }
+
+        $this->info('Routes successfully created');
+        return false;
+    }
 
 
     /**
@@ -197,6 +225,7 @@ class MigrationMakeCommand extends Command
             ['schema', 's', InputOption::VALUE_OPTIONAL, 'Optional schema to be attached to the migration', null],
             ['model', null, InputOption::VALUE_OPTIONAL, 'Want a model for this table?', true],
             ['controller', null, InputOption::VALUE_OPTIONAL, 'Want a controller for this table?', true],
+            ['views', null, InputOption::VALUE_OPTIONAL, 'Want views for this table?', true],
         ];
     }
 }

@@ -1,0 +1,12 @@
+@extends('master')
+@section('content')
+<form action="/{{plural}}/edit/{{${{singular}}->id}}" method="POST">
+@foreach($cols as $col)
+	@if($col != 'created_at' && $col != 'updated_at'  && $col != 'id')
+		<label for="{{$col}}">{{$col}}</label>
+	  	<input type="text" name="{{$col}}" value="{{${{singular}}->$col}}"><br>
+  	@endif
+@endforeach
+<input type="submit" value="save">
+</form>
+@stop
