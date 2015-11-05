@@ -14,68 +14,41 @@ use Symfony\Component\Console\Input\InputArgument;
 
 class ControllerService
 {
-    /**
-     * Generate the desired migration.
-     */
-    protected function makeMigration()
-    {
-        $name = $this->argument('name');
-
-        if ($this->files->exists($path = $this->getPath($name))) {
-            return $this->error($this->type . ' already exists!');
-        }
-
-        $this->makeDirectory($path);
-
-        $this->files->put($path, $this->compileMigrationStub());
-
-        $this->info('Migration created successfully.');
-    }
+    use AppNamespaceDetectorTrait;
 
     /**
-     * Generate an Eloquent model, if the user wishes.
+     * The filesystem instance.
+     *
+     * @var Filesystem
      */
-    protected function makeModel()
-    {
-        $modelPath = $this->getModelPath($this->getClassName());
+    protected $meta;
 
-        if ($this->option('model') && !$this->files->exists($modelPath)) {
-            $this->call('make:model', [
-                'name' => $this->getClassName()
-            ]);
-        }
+    /**
+     * The filesystem instance.
+     *
+     * @var Filesystem
+     */
+    protected $files;
+
+    public function __construct(Array $meta, Filesystem $files){
+        $this->files = $files;
+        $this->meta = $meta;
     }
 
     /**
      * Generate a fully fleshed out controller, if the user wishes.
      */
-    protected function makeController()
+    public function makeController()
     {
-        $controllerPath = $this->getControllerPath($this->getClassName());
+        $controllerPath = $this->getPath($this->getClassName());
 
-        if ($this->option('controller') && !$this->files->exists($controllerPath)) {
-            $this->files->put($controllerPath, $this->compileControllerStub());
-
-            $this->info('Controller created successfully.');
-
-            $this->composer->dumpAutoloads();
+        if (!$this->files->exists($controllerPath)) {
+            if($this->files->put($controllerPath, $this->compileControllerStub())){
+                return true;
+            }
         }
-    }
 
-    /**
-     * Compile the migration stub.
-     *
-     * @return string
-     */
-    protected function compileMigrationStub()
-    {
-        $stub = $this->files->get(__DIR__ . '/../stubs/migration.stub');
-
-        $this->replaceClassName($stub)
-            ->replaceSchema($stub)
-            ->replaceTableName($stub);
-
-        return $stub;
+        return false;
     }
 
     /**
@@ -104,40 +77,17 @@ class ControllerService
         }
     }
 
+
     /**
-     * Get the path to where we should store the migration.
+     * Get the destination class path.
      *
      * @param  string $name
      * @return string
      */
     protected function getPath($name)
     {
-        return base_path() . '/database/migrations/' . date('Y_m_d_His') . '_' . $name . '.php';
-    }
-
-    /**
-     * Get the destination class path.
-     *
-     * @param  string $name
-     * @return string
-     */
-    protected function getModelPath($name)
-    {
         $name = str_replace($this->getAppNamespace(), '', $name);
-
-        return $this->laravel['path'] . '/' . str_replace('\\', '/', $name) . '.php';
-    }
-
-        /**
-     * Get the destination class path.
-     *
-     * @param  string $name
-     * @return string
-     */
-    protected function getControllerPath($name)
-    {
-        $name = str_replace($this->getAppNamespace(), '', $name);
-        return $this->laravel['path'] . '/Http/Controllers/' . str_replace('\\', '/', $name) . '.php';
+        return app_path() . '/Http/Controllers/' . str_replace('\\', '/', $name) . '.php';
     }
 
     /**
@@ -166,40 +116,6 @@ class ControllerService
 
         $variableName = str_singular(strtolower(camel_case($this->getClassName())));
         $stub = str_replace('{{singular}}', $variableName, $stub);
-
-        return $this;
-    }
-
-    /**
-     * Replace the table name in the stub.
-     *
-     * @param  string $stub
-     * @return $this
-     */
-    protected function replaceTableName(&$stub)
-    {
-        $table = $this->meta['table'];
-
-        $stub = str_replace('{{table}}', $table, $stub);
-
-        return $this;
-    }
-
-    /**
-     * Replace the schema for the stub.
-     *
-     * @param  string $stub
-     * @return $this
-     */
-    protected function replaceSchema(&$stub)
-    {
-        if ($schema = $this->option('schema')) {
-            $schema = (new SchemaParser)->parse($schema);
-        }
-
-        $schema = (new SyntaxBuilder)->create($schema, $this->meta);
-
-        $stub = str_replace(['{{schema_up}}', '{{schema_down}}'], $schema, $stub);
 
         return $this;
     }

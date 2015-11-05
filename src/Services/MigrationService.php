@@ -14,7 +14,6 @@ use Symfony\Component\Console\Input\InputArgument;
 
 class MigrationService
 {
-
     /**
      * The filesystem instance.
      *
@@ -55,6 +54,8 @@ class MigrationService
         if($this->files->put($path, $this->compileMigrationStub())){
             return true;
         }
+
+        return false;
     }
 
     /**
@@ -79,18 +80,6 @@ class MigrationService
     protected function getPath($name)
     {
         return base_path() . '/database/migrations/' . date('Y_m_d_His') . '_' . $name . '.php';
-    }
-
-    /**
-     * Get the destination class path.
-     *
-     * @param  string $name
-     * @return string
-     */
-    protected function getModelPath($name)
-    {
-        $name = str_replace($this->getAppNamespace(), '', $name);
-        return $this->laravel['path'] . '/' . str_replace('\\', '/', $name) . '.php';
     }
 
     /**
