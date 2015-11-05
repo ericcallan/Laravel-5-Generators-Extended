@@ -1,6 +1,7 @@
 @extends('master')
 @section('content')
 <form action="/{{plural}}/create" method="POST">
+<input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
 @foreach($cols as $col)
 	@if($col != 'created_at' && $col != 'updated_at'  && $col != 'id')
 		<label for="{{$col}}">{{$col}}</label>

@@ -7,6 +7,8 @@ use App\{{class}};
 class {{class}}Controller extends Controller
 {
 
+    protected $excluded = ['id', 'created_at', 'deleted_at', 'updated_at'];
+
     public function __construct()
     {
     }
@@ -48,7 +50,7 @@ class {{class}}Controller extends Controller
         $cols = \Schema::getColumnListing('{{plural}}');
         ${{singular}} = new {{class}}();
         foreach($cols as $col) {
-            if($col != 'id' && $col != 'created_at' && $col != 'updated_at') {
+            if(!in_array($col, $this->excluded)) {
                 ${{singular}}->$col = $input[$col];
             }
         }
@@ -83,7 +85,7 @@ class {{class}}Controller extends Controller
         $cols = \Schema::getColumnListing('{{plural}}');
         ${{singular}} = {{class}}::findOrFail($id);
         foreach($cols as $col) {
-            if($col != 'id' && $col != 'created_at' && $col != 'updated_at') {
+            if(!in_array($col, $this->excluded)) {
                 ${{singular}}->$col = $input[$col];
             }
         }
@@ -102,6 +104,7 @@ class {{class}}Controller extends Controller
     {
         ${{singular}} = {{class}}::find($id);
         ${{singular}}->delete();
+        return redirect('/{{plural}}');
     }
 
 }

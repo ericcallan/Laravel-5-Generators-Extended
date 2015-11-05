@@ -73,7 +73,7 @@ Using the schema from earlier...
 --schema="username:string, email:string:unique"
 ```
 
-...this will give you:
+...this will give you a migration:
 
 ```php
 <?php
@@ -110,9 +110,145 @@ class CreateUsersTable extends Migration {
 
 }
 ```
-
 When generating migrations with schema, the name of your migration (like, "create_users_table") matters. We use it to figure out what you're trying to accomplish. In this case, we began with the "create" keyword, which signals that we want to create a
 new table.
+
+Additionally you will get
+
+...a controller:
+
+```php
+<?php
+namespace App\Http\Controllers;
+
+use Illuminate\Support\Facades\Input;
+use App\User;
+
+class UserController extends Controller
+{
+
+    protected $excluded = ['id', 'created_at', 'deleted_at', 'updated_at'];
+
+    public function __construct()
+    {
+    }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return Response
+     */
+    public function index()
+    {
+        $users = User::all();
+        $cols = \Schema::getColumnListing('users');
+        $data = array('data' => $users, 'cols' => $cols);
+
+        return \View::make('User.index', $data);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return Response
+     */
+    public function create()
+    {
+        $cols = \Schema::getColumnListing('users');
+        $data = array('cols' => $cols);
+        return \View::make('User.create', $data);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @return Response
+     */
+    public function store()
+    {
+        $input = \Input::all();
+        $cols = \Schema::getColumnListing('users');
+        $user = new User();
+        foreach($cols as $col) {
+            if(!in_array($col, $this->excluded)) {
+                $user->$col = $input[$col];
+            }
+        }
+        $user->save();
+
+        return redirect('/users');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return Response
+     */
+    public function edit($id)
+    {
+        $user = User::findOrFail($id);
+        $cols = \Schema::getColumnListing('users');
+        $data = array('user' => $user, 'cols' => $cols);
+        return \View::make('User.edit', $data);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  int  $id
+     * @return Response
+     */
+    public function update($id)
+    {
+        $input = \Input::all();
+        $cols = \Schema::getColumnListing('users');
+        $user = User::findOrFail($id);
+        foreach($cols as $col) {
+            if(!in_array($col, $this->excluded)) {
+                $user->$col = $input[$col];
+            }
+        }
+        $user->save();
+
+        return redirect('/users');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return Response
+     */
+    public function destroy($id)
+    {
+        $user = User::find($id);
+        $user->delete();
+        return redirect('/users');
+    }
+
+}
+
+```
+... a model
+```php
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class User extends Model
+{
+    //
+}
+```
+As well as a set of views for managing your tables
+
+/users -> index listing of users
+/users/create -> form to create a new user
+/users/edit -> form to edit an existing user
+
 
 Alternatively, we can use the "remove" or "add" keywords, and the generated boilerplate will adapt, as needed. Let's create a migration to remove a column.
 
