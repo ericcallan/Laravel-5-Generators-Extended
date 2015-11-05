@@ -245,11 +245,63 @@ class User extends Model
 ```
 As well as a set of views for managing your tables
 
-/users -> index listing of users
-/users/create -> form to create a new user
-/users/edit -> form to edit an existing user
+/users -> a listing of your current resource
 
+```php
+<a class="button" href="users/create">create new user</a>
+<table>
+<tr>
+@foreach($cols as $col)
+	@if($col != 'created_at' && $col != 'updated_at')
+	<th>{{$col}}</th>
+	@endif
+@endforeach
+	<th>edit</th>
+	<th>delete</th>
+</tr>
+@foreach($data as $item)
+<tr>
+	@foreach($cols as $col)
+		@if($col != 'created_at' && $col != 'updated_at')
+		<td>{{$item->$col}}</td>
+		@endif
+	@endforeach
+	<td><a href="users/edit/{{$item->id}}">edit</a></td>
+	<td><a href="users/delete/{{$item->id}}">delete</a></td>
+</tr>
+@endforeach
+```
 
+/users/create -> form to create a new resource
+
+```php
+<form action="/users/create" method="POST">
+<input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+@foreach($cols as $col)
+	@if($col != 'created_at' && $col != 'updated_at'  && $col != 'id')
+		<label for="{{$col}}">{{$col}}</label>
+	  	<input type="text" name="{{$col}}" value=""><br>
+  	@endif
+@endforeach
+<input type="submit" value="create">
+</form>
+/users/edit -> form to edit an existing resource
+```
+
+/users/edit/id -> form to edit an existing resource
+
+```php
+<form action="/users/edit/{{$user->id}}" method="POST">
+<input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+@foreach($cols as $col)
+	@if($col != 'created_at' && $col != 'updated_at'  && $col != 'id')
+		<label for="{{$col}}">{{$col}}</label>
+	  	<input type="text" name="{{$col}}" value="{{$user->$col}}"><br>
+  	@endif
+@endforeach
+<input type="submit" value="save">
+</form>
+```
 Alternatively, we can use the "remove" or "add" keywords, and the generated boilerplate will adapt, as needed. Let's create a migration to remove a column.
 
 ```
